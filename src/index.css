@@ -1,0 +1,286 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap');
+
+:root {
+  --bg-color: #0f172a;
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --primary: #3b82f6;
+  --accent: #f43f5e;
+  --text: #f8fafc;
+  --text-dim: #94a3b8;
+  --success: #10b981;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.app-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100vh;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+}
+
+/* Visualization Styles */
+.visualization-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.horizontal-list {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.vertical-image-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-card {
+  min-width: 140px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.image-header {
+  background: var(--primary);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.layer-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 8px;
+  gap: 4px;
+}
+
+.layer {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.container-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.network-graph {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.network-svg {
+  width: 100%;
+  height: 260px;
+  display: block;
+}
+
+.network-cards {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.network-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.network-card p {
+  margin: 8px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.container-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.container-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+}
+
+.container-card.stopped {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.container-status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.container-card b {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.container-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.container-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-icon {
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+
+.action-icon:hover {
+  color: var(--accent);
+}
+
+/* Terminal Container */
+.terminal-container {
+  background: #1a1b26;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+/* Level Panel */
+.level-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.level-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.level-progress {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.level-title {
+  margin: 0 0 6px 0;
+  font-size: 1.05rem;
+}
+
+.level-description {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.level-badge {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 12px;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.level-badge.complete {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.level-badge.inprogress {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.level-next-btn {
+  width: 100%;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--primary);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, filter 0.2s;
+}
+
+.level-next-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+  opacity: 0.5;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

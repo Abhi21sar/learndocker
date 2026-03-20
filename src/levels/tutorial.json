@@ -1,0 +1,65 @@
+[
+  {
+    "id": "lvl-1",
+    "title": "Welcome to Docker",
+    "description": "Welcome! In this first level, you'll learn how to start your very first container. Docker containers are isolated environments that run applications.",
+    "objective": "Start a container named 'ubuntu' using the command: `docker run ubuntu`",
+    "goal": {
+      "type": "container_exists",
+      "image": "ubuntu"
+    }
+  },
+  {
+    "id": "lvl-2",
+    "title": "Listing Containers",
+    "description": "Great job! Now let's see which containers are running. The `docker ps` command shows you all active containers.",
+    "objective": "Run the command: `docker ps`",
+    "goal": {
+      "type": "command_history",
+      "command": "docker ps"
+    }
+  },
+  {
+    "id": "lvl-3",
+    "title": "Networks: Connect Containers",
+    "description": "Networks let containers talk to each other. We'll create a network and connect your Ubuntu container to it.",
+    "objective": "Create a network `mynet` and connect the running `ubuntu` container to it.",
+    "goal": {
+      "type": "network_connected",
+      "network": "mynet",
+      "container_image": "ubuntu"
+    }
+  },
+  {
+    "id": "lvl-4",
+    "title": "Volumes: Mount Data",
+    "description": "Volumes persist container data beyond the container lifecycle. We'll create a volume and mount it inside a container.",
+    "objective": "Create/mount a volume `myvol` to `/data` inside an `ubuntu` container.",
+    "goal": {
+      "type": "volume_mounted",
+      "volume": "myvol",
+      "mount_path": "/data",
+      "container_image": "ubuntu"
+    }
+  },
+  {
+    "id": "lvl-5",
+    "title": "Compose: Multi-Container Setup",
+    "description": "Docker Compose can orchestrate multiple containers together. This simulator will start a small multi-service topology.",
+    "objective": "Run `docker compose up`",
+    "goal": {
+      "type": "compose_started"
+    }
+  },
+  {
+    "id": "lvl-6",
+    "title": "Build: Image Layers",
+    "description": "A Docker image is built from layers. We'll simulate building an image and visualizing its layer stack.",
+    "objective": "Build an image named `myapp` with: `docker build -t myapp .`",
+    "goal": {
+      "type": "image_has_layers",
+      "image": "myapp",
+      "min_layers": 3
+    }
+  }
+]
