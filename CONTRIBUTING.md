@@ -71,11 +71,12 @@ npm run dev       # → http://localhost:5173
 ```
 src/
 ├── engine/DockerEngine.js    ← Add new docker commands here
+├── store/useDockerStore.js   ← Global state (Zustand)
 ├── levels/LevelManager.js    ← Add new goal types here
 ├── levels/tutorial.json      ← Add new levels here
 └── components/
     ├── Terminal.jsx           ← Terminal UI (xterm.js)
-    └── Visualization.jsx      ← Visual state diagram
+    └── Visualization.jsx      ← Visual state diagram (React Flow)
 tests/
 └── engine-goals.test.mjs     ← Add tests for new goals here
 ```

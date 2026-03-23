@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
 import { useDockerStore } from '../store/useDockerStore';
 import { highlightDockerCommand } from '../utils/Lexer';
 
@@ -95,6 +96,7 @@ const Terminal = ({ onCommandExecuted } = {}) => {
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
+    term.loadAddon(new WebLinksAddon());
     xtermRef.current = term;
 
     if (terminalRef.current) {

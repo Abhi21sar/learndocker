@@ -19,47 +19,59 @@ const Visualization = () => {
   const { nodes, edges } = useMemo(() => {
     const newNodes = [];
     const newEdges = [];
+    
+    const goalState = state.getGoalState();
+    
+    // Helper to add nodes with a specific style
+    const addNodes = (stateToRender, isGoal = false) => {
+      const offset = isGoal ? 20 : 0;
+      const opacity = isGoal ? 0.3 : 1;
+      const prefix = isGoal ? 'goal-' : '';
 
-    // Layout networks at the top
-    (state.networks || []).forEach((net, idx) => {
-      const x = ((idx + 1) / ((state.networks || []).length + 1)) * 600;
-      newNodes.push({
-        id: net.id,
-        type: 'network',
-        position: { x, y: 50 },
-        data: { name: net.name },
-      });
-    });
-
-    // Layout containers below
-    (state.containers || []).forEach((c, idx) => {
-      const cols = 3;
-      const row = Math.floor(idx / cols);
-      const col = idx % cols;
-      const x = ((col + 1) / (cols + 1)) * 600;
-      const y = 150 + row * 100;
-
-      newNodes.push({
-        id: c.id,
-        type: 'container',
-        position: { x, y },
-        data: { ...c },
-      });
-
-      // Create edges for network connections
-      (c.networkIds || []).forEach((netId) => {
-        newEdges.push({
-          id: `e-${netId}-${c.id}`,
-          source: netId,
-          target: c.id,
-          animated: c.status === 'Up',
-          style: { stroke: 'var(--primary)', strokeWidth: 2, opacity: 0.6 },
+      (stateToRender.networks || []).forEach((net, idx) => {
+        const x = ((idx + 1) / ((stateToRender.networks || []).length + 1)) * 600 + offset;
+        newNodes.push({
+          id: prefix + net.id,
+          type: 'network',
+          position: { x, y: 50 + offset },
+          data: { name: net.name + (isGoal ? ' (Goal)' : ''), isGoal },
+          style: { opacity }
         });
       });
-    });
+
+      (stateToRender.containers || []).forEach((c, idx) => {
+        const cols = 3;
+        const row = Math.floor(idx / cols);
+        const col = idx % cols;
+        const x = ((col + 1) / (cols + 1)) * 600 + offset;
+        const y = 150 + row * 100 + offset;
+
+        newNodes.push({
+          id: prefix + (c.id || c.name),
+          type: 'container',
+          position: { x, y },
+          data: { ...c, isGoal },
+          style: { opacity }
+        });
+
+        // Edges
+        (c.networkIds || c.networks || []).forEach((netId) => {
+          newEdges.push({
+            id: `e-${prefix}-${netId}-${c.id || c.name}`,
+            source: prefix + netId,
+            target: prefix + (c.id || c.name),
+            animated: !isGoal && c.status === 'Up',
+            style: { stroke: isGoal ? '#64748b' : 'var(--primary)', strokeWidth: 2, opacity: isGoal ? 0.2 : 0.6 },
+          });
+        });
+      });
+    };
+
+    addNodes(state); // Current state
+    addNodes(goalState, true); // Target state (ghosted)
 
     return { nodes: newNodes, edges: newEdges };
-  }, [state.containers, state.networks]);
+  }, [state, state.getGoalState]);
 
   return (
     <div className="visualization-container">
