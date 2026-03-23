@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  # ── Development: hot-reload on http://localhost:5173 ──────────────────────
+  app:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      # Mount source so Vite's HMR detects changes instantly
+      - .:/app
+      # Isolate container node_modules from the host
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      - NODE_ENV=development
+
+  # ── Production: nginx serving the compiled build on http://localhost:8080 ──
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production

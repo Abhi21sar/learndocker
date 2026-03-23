@@ -21,6 +21,7 @@ export function evaluateGoal(goal, snapshot, history) {
       const networkName = goal.network;
 
       const networkId = networkName ? findNetworkIdByName(networkName) : null;
+      if (networkName && !networkId) return false;
 
       return containers.some((c) => {
         if (image && c.imageName !== image) return false;

@@ -246,7 +246,6 @@ export class DockerEngine {
         i++;
         continue;
       }
-      if (!args[i].startsWith('-') && !tag) tag = args[i];
     }
 
     if (!tag) return 'Simulated build: Error (missing image name/tag)';
