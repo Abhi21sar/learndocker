@@ -157,6 +157,18 @@ test('multiple containers can run without conflict', () => {
   assert.equal(e.getSnapshot().containers.length, 3);
 });
 
+test('-p flag sets custom port mapping', () => {
+  const e = freshEngine();
+  e.execute('docker run -p 3000:3000 ubuntu');
+  assert.equal(e.getSnapshot().containers[0].ports, '3000:3000');
+});
+
+test('-d flag sets isDetached to true', () => {
+  const e = freshEngine();
+  e.execute('docker run -d ubuntu');
+  assert.equal(e.getSnapshot().containers[0].isDetached, true);
+});
+
 // ══════════════════════════════════════════════════════════════════════════════
 // SECTION 3 — DockerEngine: docker ps
 // ══════════════════════════════════════════════════════════════════════════════
@@ -281,6 +293,36 @@ test('--tag alias works same as -t', () => {
   const e = freshEngine();
   e.execute('docker build --tag myapp2 .');
   assert.ok(e.getSnapshot().images.find(i => i.name === 'myapp2'));
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECTION 6.5 — DockerEngine: docker push
+// ══════════════════════════════════════════════════════════════════════════════
+section('docker push');
+
+test('push returns error when no image name given', () => {
+  const e = freshEngine();
+  const out = e.execute('docker push');
+  assert.match(out, /missing image name/i);
+});
+
+test('push returns error for non-existent image', () => {
+  const e = freshEngine();
+  const out = e.execute('docker push ghost');
+  assert.match(out, /does not exist locally/i);
+});
+
+test('push returns success message for existing image', () => {
+  const e = freshEngine();
+  const out = e.execute('docker push ubuntu');
+  assert.match(out, /The push refers to repository/i);
+  assert.match(out, /Pushed/i);
+});
+
+test('push records command in history', () => {
+  const e = freshEngine();
+  e.execute('docker push ubuntu');
+  assert.ok(e.getHistory().includes('docker push ubuntu'));
 });
 
 // ══════════════════════════════════════════════════════════════════════════════

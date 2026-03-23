@@ -138,6 +138,8 @@ export class DockerEngine {
         return this.removeContainer(args);
       case 'build':
         return this.buildImage(args);
+      case 'push':
+        return this.pushImage(args);
       case 'network':
         return this.networkCommands(args);
       case 'volume':
@@ -158,6 +160,8 @@ export class DockerEngine {
     let requestedNetwork = null;
     const mounts = [];
     let imageName = null;
+    let ports = '80/tcp';
+    let isDetached = false;
 
     for (let i = 0; i < args.length; i++) {
       const a = args[i];
@@ -178,6 +182,15 @@ export class DockerEngine {
         i++;
         continue;
       }
+      if (a === '-p' || a === '--publish') {
+        ports = args[i + 1];
+        i++;
+        continue;
+      }
+      if (a === '-d' || a === '--detach') {
+        isDetached = true;
+        continue;
+      }
       if (!a.startsWith('-') && !imageName) {
         imageName = a;
       }
@@ -193,7 +206,8 @@ export class DockerEngine {
       imageId: image.id,
       imageName: image.name,
       status: 'Up',
-      ports: '80/tcp',
+      ports: ports,
+      isDetached: isDetached,
       networkIds: [],
       mounts: [] // { volumeId, volumeName, containerPath }
     };
@@ -264,6 +278,17 @@ export class DockerEngine {
 
     this.notify();
     return `Simulated build: Success (Created image '${tag}' with ${layers.length} layers)`;
+  }
+
+  pushImage(args) {
+    const imageName = args[0];
+    if (!imageName) return 'docker push: missing image name';
+    const image = this._findImage(imageName);
+    if (!image) return `An image does not exist locally with the tag: ${imageName}`;
+
+    return `The push refers to repository [docker.io/library/${imageName}]\n` +
+           `${image.layers.map(l => `${l}: Pushed`).join('\n')}\n` +
+           `latest: digest: sha256:dummydigest size: 1024`;
   }
 
   networkCommands(args) {
