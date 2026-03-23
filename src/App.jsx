@@ -2,26 +2,34 @@ import React, { useMemo, useState } from 'react'
 import Terminal from './components/Terminal'
 import Visualization from './components/Visualization'
 import { Ship } from 'lucide-react'
-import dockerEngine from './engine/DockerEngine'
+import { useDockerStore } from './store/useDockerStore'
 import LevelManager from './levels/LevelManager'
 import tutorialLevels from './levels/tutorial.json'
 
 function App() {
   const levelManager = useMemo(() => new LevelManager(tutorialLevels), [])
-  const [levelIndex, setLevelIndex] = useState(levelManager.getCurrentIndex())
+  const { xp, lvlIndex, commandCount, setLevelIndex: setStoreLvlIndex, addXP } = useDockerStore()
   const [levelStatus, setLevelStatus] = useState({ done: false, message: '' })
 
-  const currentLevel = levelManager.getCurrentLevel()
-  const totalLevels = levelManager.levels.length
-  const isLastLevel = levelManager.isLastLevel()
+  const currentLevel = tutorialLevels[lvlIndex]
+  const totalLevels = tutorialLevels.length
+  const isLastLevel = lvlIndex === totalLevels - 1
   const canAdvance = levelStatus.done && !isLastLevel
 
-  const handleCommandExecuted = () => {
-    const snapshot = dockerEngine.getSnapshot()
-    const history = dockerEngine.getHistory()
-    const result = levelManager.checkCurrentLevel(snapshot, history)
+  const handleCommandExecuted = (command) => {
+    const store = useDockerStore.getState()
+    const result = levelManager.checkCurrentLevel(store, store.getHistory())
 
     if (result.done) {
+      if (result.justCompleted) {
+        let earnedXP = 100
+        const par = currentLevel?.par || 1
+        if (store.commandCount <= par) {
+          earnedXP += 50 // Bonus for par completion
+          result.message += " (Perfect Score! Bonus XP awarded)"
+        }
+        addXP(earnedXP)
+      }
       setLevelStatus((prev) => {
         const nextMessage = result.justCompleted ? result.message : prev.message
         return { done: true, message: nextMessage }
@@ -35,31 +43,48 @@ function App() {
 
   const handleNextLevel = () => {
     levelManager.advance()
-    setLevelIndex(levelManager.getCurrentIndex())
+    setStoreLvlIndex(levelManager.getCurrentIndex())
     setLevelStatus({ done: false, message: '' })
   }
 
   return (
     <div className="app-container">
       <div className="left-panel">
-        <header style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '8px' }}>
-            <Ship size={24} color="white" />
+        <header style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '8px' }}>
+              <Ship size={24} color="white" />
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Docker Explorer</h2>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-dim)' }}>Interactive Simulator</p>
+            </div>
           </div>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Docker Explorer</h2>
-            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-dim)' }}>Interactive Simulator</p>
+          <div className="xp-badge">
+            <span className="xp-label">XP</span>
+            <span className="xp-value">{xp}</span>
           </div>
         </header>
 
         <div className="level-panel">
           <div className="level-panel-header">
             <span className="level-progress">
-              Level {Math.min(levelIndex + 1, totalLevels)} of {totalLevels}
+              Level {Math.min(lvlIndex + 1, totalLevels)} of {totalLevels}
             </span>
+            <div className="progress-bar-container">
+              <div 
+                className="progress-bar-fill" 
+                style={{ width: `${((lvlIndex + (levelStatus.done ? 1 : 0)) / totalLevels) * 100}%` }}
+              ></div>
+            </div>
           </div>
 
-          <h3 className="level-title">{currentLevel?.title || 'All levels complete'}</h3>
+          <hgroup>
+            <h3 className="level-title">{currentLevel?.title || 'All levels complete'}</h3>
+            <div className="command-stats">
+              Commands: {commandCount} / Par: {currentLevel?.par || '-'}
+            </div>
+          </hgroup>
           <p className="level-description">{currentLevel?.objective || ''}</p>
 
           <div className={`level-badge ${levelStatus.done ? 'complete' : 'inprogress'}`}>

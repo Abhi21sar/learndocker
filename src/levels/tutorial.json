@@ -7,7 +7,8 @@
     "goal": {
       "type": "container_exists",
       "image": "ubuntu"
-    }
+    },
+    "par": 1
   },
   {
     "id": "lvl-2",
@@ -18,7 +19,8 @@
       "type": "image_has_layers",
       "image": "todo-app",
       "min_layers": 3
-    }
+    },
+    "par": 1
   },
   {
     "id": "lvl-3",
@@ -29,7 +31,8 @@
       "type": "container_exists",
       "name": "my-todo",
       "image": "todo-app"
-    }
+    },
+    "par": 1
   },
   {
     "id": "lvl-4",
@@ -39,7 +42,8 @@
     "goal": {
       "type": "command_history",
       "command": "docker rm my-todo"
-    }
+    },
+    "par": 2
   },
   {
     "id": "lvl-5",
@@ -49,7 +53,8 @@
     "goal": {
       "type": "command_history",
       "command": "docker push todo-app"
-    }
+    },
+    "par": 1
   },
   {
     "id": "lvl-6",
@@ -60,7 +65,8 @@
       "type": "volume_mounted",
       "volume": "todo-db",
       "mount_path": "/etc/todos"
-    }
+    },
+    "par": 2
   },
   {
     "id": "lvl-7",
@@ -71,7 +77,8 @@
       "type": "network_connected",
       "network": "todo-net",
       "container_image": "todo-app"
-    }
+    },
+    "par": 2
   },
   {
     "id": "lvl-8",
@@ -80,6 +87,7 @@
     "objective": "Start the entire multi-container architecture at once: `docker compose up`",
     "goal": {
       "type": "compose_started"
-    }
+    },
+    "par": 1
   }
 ]
