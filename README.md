@@ -216,7 +216,7 @@ VITE_BASE=/learndocker/ npm run build
 
 ## 📄 License
 
-MIT © [Abhishek S](https://github.com/Abhi21sar) — see [LICENSE](./LICENSE).
+MIT © [Abhishek Gurjar](https://github.com/Abhi21sar) — see [LICENSE](./LICENSE).
 
 ---
 
