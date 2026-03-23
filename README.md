@@ -87,10 +87,44 @@ npm run dev
 The simulator supports a core subset of the Docker CLI:
 - `docker run`, `ps`, `stop`, `rm`, `images`
 - `docker build`, `pull`, `push`, `tag`
-- `docker network create/connect/ls`
-- `docker volume create/ls/rm`
-- `docker inspect`, `logs`, `exec` (simulated)
-- `docker compose up`
+- `docker network create/connect`
+- `docker volume create`
+- `docker pull`, `docker rmi`
+- `docker inspect`, `docker logs`, `docker stats`
+- `docker scout` — CVE scanning simulation
+- `docker init` — project scaffolding simulation
+- `docker compose up/down/watch`
+
+---
+
+## 🔒 Security Module
+
+The simulator teaches **Shift-Left security** practices:
+
+| Practice | Command | Impact |
+|---|---|---|
+| **Non-root execution** | `docker run --user 1000 ubuntu` | Limits exploit blast radius |
+| **CVE scanning** | `docker scout ubuntu` | Catches vulnerabilities before push |
+| **Image pinning** | `docker build --target production .` | Ensures reproducible, minimal builds |
+| **Network isolation** | `docker network create app-net` | DNS-based service discovery, not open bridge |
+
+Container cards in the topology visualizer show 🟢/🔴 security badges based on the user the container runs as. Network edges are **green** (isolated) or **red** (default bridge, no isolation).
+
+---
+
+## 🗺️ Portfolio Project Roadmap
+
+After completing the 12 simulator levels, tackle these real-world projects:
+
+| Level | Project | Stack |
+|---|---|---|
+| **Beginner** | Containerize a static Nginx site | HTML/CSS, Nginx, Dockerfile |
+| **Intermediate** | Full-stack app with hot-reloading | Node.js/React, MongoDB, Bind Mounts, Compose |
+| **Advanced** | CI/CD pipeline with security gates | GitHub Actions, Trivy, Docker Hub, Multi-stage |
+| **Production** | Monitoring stack with observability | Prometheus, Grafana, cAdvisor, Node Exporter |
+| **Expert** | Microservices with service discovery | Spring Boot, Redis, Consul, API Gateway |
+
+> 💡 **The Smallest Image Challenge:** Reduce a standard Node.js image from 900MB to under 50MB using multi-stage builds and Alpine base images.
 
 ---
 
@@ -98,8 +132,8 @@ The simulator supports a core subset of the Docker CLI:
 
 - **Framework:** React 19 + Vite 8
 - **State:** Zustand (Redux-like immutable state)
-- **Visualization:** @xyflow/react (React Flow)
-- **Terminal:** Xterm.js + Addons (Fit, WebLinks)
+- **Visualization:** @xyflow/react (React Flow) with isolation-aware edge coloring
+- **Terminal:** Xterm.js + Addons (Fit, WebLinks) + Ghost Text + Tab Autocomplete
 - **Animations:** Framer Motion
 - **Icons:** Lucide React
 

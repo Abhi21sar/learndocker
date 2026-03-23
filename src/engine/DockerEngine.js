@@ -432,6 +432,31 @@ export class DockerEngine {
 
   composeCommands(args) {
     const action = args[0];
+
+    if (action === 'watch') {
+      if (!this._compose.active) return 'Error: Compose is not running. Run "docker compose up" first.';
+      return [
+        '⟳  Watch mode enabled. Monitoring for file changes...',
+        '',
+        '   Service rules:',
+        '   web:  sync src/ → /app/src (hot-reload)',
+        '   web:  rebuild on package.json change',
+        '   db:   no watch rules configured',
+        '',
+        '   Tip: Edit a source file to trigger live sync without rebuilding.',
+      ].join('\n');
+    }
+
+    if (action === 'down') {
+      if (!this._compose.active) return 'No compose stack is running.';
+      this._compose.createdContainerIds.forEach(id => {
+        this.containers = this.containers.filter(c => c.id !== id);
+      });
+      this._compose = { active: false, createdContainerIds: [] };
+      this.notify();
+      return 'Stopped and removed compose services.';
+    }
+
     if (action !== 'up') return `docker compose: '${action || ''}' is not supported in simulator`;
 
     const composeNetwork = this._ensureNetwork('compose-net');

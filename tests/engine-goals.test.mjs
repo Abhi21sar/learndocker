@@ -439,7 +439,7 @@ test('compose up is a no-op when already running', () => {
 
 test('unsupported compose subcommand returns error', () => {
   const e = freshEngine();
-  const out = e.execute('docker compose down');
+  const out = e.execute('docker compose exec');
   assert.match(out, /not supported/i);
 });
 
