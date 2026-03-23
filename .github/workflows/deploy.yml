@@ -4,6 +4,9 @@ on:
   push:
     branches: 'main'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: read
   pages: write
@@ -26,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build
-        run: VITE_BASE=/${{ github.event.repository.name }}/ npm run build
+        run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
