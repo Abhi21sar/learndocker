@@ -11,7 +11,7 @@ export function highlightDockerCommand(commandStr) {
       return `\x1b[1;34m${token}\x1b[0m`; // Blue bold
     }
 
-    if (isDocker && !hasSubcommand && ['run', 'ps', 'images', 'stop', 'rm', 'build', 'push', 'network', 'volume', 'compose'].includes(token)) {
+    if (isDocker && !hasSubcommand && ['run', 'ps', 'images', 'stop', 'rm', 'rmi', 'build', 'push', 'pull', 'inspect', 'logs', 'stats', 'scout', 'init', 'network', 'volume', 'compose'].includes(token)) {
       hasSubcommand = true;
       return `\x1b[1;32m${token}\x1b[0m`; // Green bold
     }

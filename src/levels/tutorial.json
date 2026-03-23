@@ -85,9 +85,63 @@
     "title": "Docker Compose",
     "description": "Typing `docker run`, `network create`, and `volume create` manually is exhausting. Docker Compose orchestrates your entire architecture in one command using a YAML file.",
     "objective": "Start the entire multi-container architecture at once: `docker compose up`",
+    "hint": "Just run `docker compose up` — Compose reads the yaml and starts everything.",
+    "why": "In production, compose.yaml is the single source of truth for your local dev environment.",
     "goal": {
       "type": "compose_started"
     },
     "par": 1
+  },
+  {
+    "id": "lvl-9",
+    "title": "Multi-Stage Builds",
+    "description": "A standard Node.js image can be 900MB+. With multi-stage builds, we separate the build environment from the runtime — shrinking images to under 50MB. This reduces attack surface and speeds up deployments.",
+    "objective": "1. Build an optimized image: `docker build -t todo-app-slim --target production .`\n2. Inspect it: `docker images`",
+    "hint": "Use `--target` to tell Docker which stage of your multi-stage Dockerfile to stop at.",
+    "why": "Smaller images deploy faster, use less bandwidth, and expose fewer vulnerabilities — a standard in any production CI/CD pipeline.",
+    "goal": {
+      "type": "image_has_layers",
+      "image": "todo-app-slim",
+      "min_layers": 2
+    },
+    "par": 2
+  },
+  {
+    "id": "lvl-10",
+    "title": "The Data Loss Scenario",
+    "description": "Containers are ephemeral — when removed, all internal data is gone forever. Run a database container, add data, then delete it and watch it vanish. This is WHY volumes exist.",
+    "objective": "1. Run `docker run --name my-db ubuntu`\n2. Remove it: `docker rm my-db`\n3. Run `docker inspect my-db` — notice it no longer exists.",
+    "hint": "After `docker rm`, the container is gone. Any data stored inside it is permanently deleted.",
+    "why": "Understanding ephemeral state is the #1 aha-moment for Docker beginners. It motivates proper use of Named Volumes in production.",
+    "goal": {
+      "type": "command_history",
+      "command": "docker inspect my-db"
+    },
+    "par": 3
+  },
+  {
+    "id": "lvl-11",
+    "title": "Security Hardening",
+    "description": "By default containers run as root — a serious security risk. If an attacker exploits your app, they have root access to the container. Always run as a non-root user. Also: scan your images for known CVEs.",
+    "objective": "1. Run as non-root: `docker run --user 1000 ubuntu`\n2. Scan for vulnerabilities: `docker scout ubuntu`",
+    "hint": "The `--user` flag accepts a UID (like 1000) or a username. Docker Scout is built into the Docker CLI.",
+    "why": "CIS Docker Benchmark and most enterprise security policies mandate non-root container execution. Shift-Left security means scanning before deployment.",
+    "goal": {
+      "type": "command_history",
+      "command": "docker scout ubuntu"
+    },
+    "par": 2
+  },
+  {
+    "id": "lvl-12",
+    "title": "Capstone: Production Microservices",
+    "description": "Bring it all together! Build a production-ready stack: a web service and a database, connected over an isolated network with a persistent volume — then scaffold the whole thing with `docker init`.",
+    "objective": "1. Run `docker init` to scaffold the project\n2. Create network: `docker network create prod-net`\n3. Create volume: `docker volume create prod-db`\n4. Start the stack: `docker compose up`",
+    "hint": "`docker init` auto-generates a Dockerfile, compose.yaml, and .dockerignore for your stack.",
+    "why": "This is the real-world pattern: network isolation + persistent storage + compose orchestration is the baseline for any production containerized application.",
+    "goal": {
+      "type": "compose_started"
+    },
+    "par": 4
   }
 ]

@@ -136,10 +136,24 @@ export class DockerEngine {
         return this.stopContainer(args);
       case 'rm':
         return this.removeContainer(args);
+      case 'rmi':
+        return this.removeImage(args);
       case 'build':
         return this.buildImage(args);
       case 'push':
         return this.pushImage(args);
+      case 'pull':
+        return this.pullImage(args);
+      case 'inspect':
+        return this.inspectResource(args);
+      case 'logs':
+        return this.logsContainer(args);
+      case 'stats':
+        return this.statsContainers();
+      case 'scout':
+        return this.scoutImage(args);
+      case 'init':
+        return this.dockerInit();
       case 'network':
         return this.networkCommands(args);
       case 'volume':
@@ -152,48 +166,28 @@ export class DockerEngine {
   }
 
   runContainer(args) {
-    // Supported options (MVP):
-    // - --name <name>
-    // - --network <networkName>
-    // - -v <volumeName>:<containerPath>
     let containerName = null;
     let requestedNetwork = null;
     const mounts = [];
     let imageName = null;
     let ports = '80/tcp';
     let isDetached = false;
+    let userId = null; // for --user flag (security hardening)
 
     for (let i = 0; i < args.length; i++) {
       const a = args[i];
-      if (a === '--name') {
-        containerName = args[i + 1];
-        i++;
-        continue;
-      }
-      if (a === '--network') {
-        requestedNetwork = args[i + 1];
-        i++;
-        continue;
-      }
+      if (a === '--name') { containerName = args[i + 1]; i++; continue; }
+      if (a === '--network') { requestedNetwork = args[i + 1]; i++; continue; }
       if (a === '-v') {
         const spec = args[i + 1] || '';
         const [volName, mountPath] = spec.split(':');
         if (volName && mountPath) mounts.push({ volumeName: volName, containerPath: mountPath });
-        i++;
-        continue;
+        i++; continue;
       }
-      if (a === '-p' || a === '--publish') {
-        ports = args[i + 1];
-        i++;
-        continue;
-      }
-      if (a === '-d' || a === '--detach') {
-        isDetached = true;
-        continue;
-      }
-      if (!a.startsWith('-') && !imageName) {
-        imageName = a;
-      }
+      if (a === '-p' || a === '--publish') { ports = args[i + 1]; i++; continue; }
+      if (a === '-d' || a === '--detach') { isDetached = true; continue; }
+      if (a === '--user') { userId = args[i + 1]; i++; continue; }
+      if (!a.startsWith('-') && !imageName) { imageName = a; }
     }
 
     const image = imageName ? this._findImage(imageName) : null;
@@ -208,8 +202,9 @@ export class DockerEngine {
       status: 'Up',
       ports: ports,
       isDetached: isDetached,
+      userId: userId || 'root',
       networkIds: [],
-      mounts: [] // { volumeId, volumeName, containerPath }
+      mounts: []
     };
 
     const network = requestedNetwork ? this._ensureNetwork(requestedNetwork) : this._ensureNetwork('bridge');
@@ -250,34 +245,134 @@ export class DockerEngine {
   }
 
   buildImage(args) {
-    // Minimal parsing:
-    // - docker build -t <name> .
-    // - docker build <name>
     let tag = null;
+    let target = null;
     for (let i = 0; i < args.length; i++) {
-      if (args[i] === '-t' || args[i] === '--tag') {
-        tag = args[i + 1];
-        i++;
-        continue;
-      }
+      if (args[i] === '-t' || args[i] === '--tag') { tag = args[i + 1]; i++; continue; }
+      if (args[i] === '--target') { target = args[i + 1]; i++; continue; }
     }
 
     if (!tag) return 'Simulated build: Error (missing image name/tag)';
 
     const contextToken = args[args.length - 1] || '.';
     const id = `img-${this._nextImageSeq++}`;
-
-    // Deterministic "layer creation" based on the context token.
     const base = contextToken.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'context';
-    const layers = [`${tag}-base`, `${base}-layer-1`, `${base}-layer-2`, `${base}-cmd`];
 
-    const imageObj = { id, name: tag, layers, tag: 'latest' };
+    // Multi-stage: fewer layers when a --target is specified (optimized build)
+    const layers = target
+      ? [`${tag}-runtime`, `${tag}-${target}-optimized`]
+      : [`${tag}-base`, `${base}-layer-1`, `${base}-layer-2`, `${base}-cmd`];
+
+    const imageObj = { id, name: tag, layers, tag: 'latest', target: target || null };
     const existingIdx = this.images.findIndex((img) => img.name === tag);
     if (existingIdx >= 0) this.images[existingIdx] = imageObj;
     else this.images.push(imageObj);
 
     this.notify();
-    return `Simulated build: Success (Created image '${tag}' with ${layers.length} layers)`;
+    const stageMsg = target ? ` [multi-stage --target ${target}]` : '';
+    return `Simulated build: Success (Created image '${tag}'${stageMsg} with ${layers.length} layers)`;
+  }
+
+  pullImage(args) {
+    const imageName = args[0];
+    if (!imageName) return 'docker pull: requires image name';
+    if (this._findImage(imageName)) return `${imageName}: Image already up to date`;
+    const id = `img-${this._nextImageSeq++}`;
+    const image = { id, name: imageName, layers: [`${imageName}-layer-1`, `${imageName}-layer-2`], tag: 'latest' };
+    this.images.push(image);
+    this.notify();
+    return `Pulling from library/${imageName}\nStatus: Downloaded newer image for ${imageName}:latest`;
+  }
+
+  removeImage(args) {
+    const imageName = args[0];
+    if (!imageName) return 'docker rmi: requires image name';
+    const idx = this.images.findIndex(img => img.name === imageName || img.id === imageName);
+    if (idx === -1) return `Error: No such image: ${imageName}`;
+    const inUse = this.containers.some(c => c.imageName === imageName);
+    if (inUse) return `Error: image ${imageName} is used by a running container. Stop and remove it first.`;
+    this.images.splice(idx, 1);
+    this.notify();
+    return `Untagged: ${imageName}:latest\nDeleted: sha256:simulated`;
+  }
+
+  inspectResource(args) {
+    const target = args[0];
+    if (!target) return 'docker inspect: requires a container or image name';
+    const container = this._findContainerByIdOrName(target);
+    if (container) {
+      return JSON.stringify([{
+        Id: container.id,
+        Name: `/${container.name}`,
+        State: { Status: container.status === 'Up' ? 'running' : 'exited', Running: container.status === 'Up' },
+        Image: container.imageName,
+        NetworkSettings: { Networks: Object.fromEntries(container.networkIds.map(n => [n, { IPAddress: '172.17.0.2' }])) },
+        Mounts: container.mounts,
+        Config: { User: container.userId || 'root' }
+      }], null, 2);
+    }
+    const image = this._findImage(target);
+    if (image) {
+      return JSON.stringify([{ Id: image.id, RepoTags: [`${image.name}:${image.tag}`], Layers: image.layers }], null, 2);
+    }
+    return `Error: No such container or image: ${target}`;
+  }
+
+  logsContainer(args) {
+    const target = args[0];
+    if (!target) return 'docker logs: requires container name';
+    const container = this._findContainerByIdOrName(target);
+    if (!container) return `Error: No such container: ${target}`;
+    return [
+      `[2026-03-24T01:00:00Z] ${container.imageName} started on port ${container.ports}`,
+      `[2026-03-24T01:00:01Z] Listening for connections...`,
+      `[2026-03-24T01:00:02Z] Health check: OK`,
+    ].join('\n');
+  }
+
+  statsContainers() {
+    if (this.containers.length === 0) return 'No running containers.';
+    let out = 'CONTAINER ID   NAME               CPU %   MEM USAGE / LIMIT   NET I/O\n';
+    this.containers.filter(c => c.status === 'Up').forEach((c, i) => {
+      const cpu = (Math.random() * 2 + 0.1).toFixed(2);
+      const mem = (Math.random() * 200 + 50).toFixed(0);
+      out += `${c.id}   ${c.name.padEnd(18)} ${cpu}%   ${mem}MiB / 2GiB       0B / 0B\n`;
+    });
+    return out;
+  }
+
+  scoutImage(args) {
+    const imageName = args[args.length - 1];
+    if (!imageName) return 'docker scout: requires image name';
+    const image = this._findImage(imageName);
+    if (!image) return `Error: image not found locally: ${imageName}. Run 'docker pull ${imageName}' first.`;
+    return [
+      `✓  Analyzed image: ${imageName}:${image.tag}`,
+      `   Layers: ${image.layers.length}`,
+      ``,
+      `   Vulnerabilities:`,
+      `   ✗  2 Critical  (CVE-2024-1234, CVE-2024-5678)`,
+      `   ⚠  5 High      (various base image CVEs)`,
+      `   ℹ  12 Medium`,
+      ``,
+      `   Recommendations:`,
+      `   ▸  Pin base image: ${imageName}@sha256:abc123def456`,
+      `   ▸  Use 'docker build --no-cache' to rebuild clean`,
+      `   ▸  Run as non-root: add USER 1000 to your Dockerfile`,
+    ].join('\n');
+  }
+
+  dockerInit() {
+    return [
+      `✓  Created: Dockerfile (Node.js 20 Alpine — multi-stage)`,
+      `✓  Created: compose.yaml (web + db services)`,
+      `✓  Created: .dockerignore (node_modules, .git, dist)`,
+      ``,
+      `Next steps:`,
+      `  1. Edit compose.yaml to configure your services`,
+      `  2. Run 'docker compose up' to start the stack`,
+      `  3. Add 'watch:' rules to enable live file sync with 'docker compose watch'`,
+    ].join('\n');
   }
 
   pushImage(args) {
